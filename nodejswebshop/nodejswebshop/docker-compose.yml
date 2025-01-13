@@ -51,6 +51,8 @@ services:
         command: "npm start"
         #command: "npm run dev"
 
+    
+
 
 # The database will be persistent among containers restarts.
 volumes:
