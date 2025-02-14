@@ -3,8 +3,11 @@ const crypto = require("crypto");
 const router = express.Router();
 const controller = require("../controllers/UserController");
 const jwt = require("jsonwebtoken");
+const fs = require("file-system");
+
 //router.get("/", controller.get);
 module.exports = router;
+const privatekey = fs.readFileSync("../private.key");
 
 var mysql = require("mysql2/promise");
 var pool = mysql.createPool({
