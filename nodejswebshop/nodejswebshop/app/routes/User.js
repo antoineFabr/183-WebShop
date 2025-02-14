@@ -2,6 +2,7 @@ const express = require("express");
 const crypto = require("crypto");
 const router = express.Router();
 const controller = require("../controllers/UserController");
+const jwt = require("jsonwebtoken");
 //router.get("/", controller.get);
 module.exports = router;
 
@@ -27,8 +28,9 @@ router.get("/menu", (req, res) => {
   res.render("menu", { name: req.body.mail });
 });
 
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   if (!req.body.mail || !req.body.password) {
+    console.log("il manque un mail ou un mot de passe");
     return res.render("login", {
       name: "il manque un mail ou un mot de passe",
     });
@@ -36,10 +38,11 @@ router.post("/login", (req, res) => {
   //si il y a les deux champs rempli on passe au requête sql
 
   const mail = req.body.mail.toString();
-  const query = `SELECT motDePasse, sel FROM T_user where addresseMail = ?;`;
-  pool.query(query, mail, function (error, results, fields) {
-    if (error) throw error;
 
+  const query = `SELECT motDePasse, sel FROM T_user where mail = ?;`;
+
+  try {
+    const [results, fields] = await pool.query(query, mail);
     const sel = results[0].sel;
     console.log("sel", results[0].sel);
 
@@ -56,16 +59,20 @@ router.post("/login", (req, res) => {
     } else {
       res.render("login", { name: "mail ou mot de passe incorrecte" });
     }
-  });
+  } catch (err) {
+    console.log(err);
+  }
 });
 router.post("/register", (req, res) => {
   const salt = crypto.randomBytes(8).toString("hex");
-  console.log(salt);
-  const cryptedPw = crypto.hash("sha256", req.body.pw + salt);
 
-  const query = `INSERT INTO T_user (addresseMail, motDePasse, sel) VALUES (?, ?, ?);`;
+  console.log(salt);
+  const cryptedPw = crypto.hash("sha256", req.body.password + salt);
+
+  const query = `INSERT INTO T_user (mail, motDePasse, sel) VALUES (?, ?, ?);`;
   const values = [req.body.mail, cryptedPw, salt];
 
   pool.query(query, values);
+
   res.redirect("http://localhost:8080/user/menu");
 });
