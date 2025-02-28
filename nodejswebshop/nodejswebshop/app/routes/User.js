@@ -1,11 +1,13 @@
 const express = require("express");
 const crypto = require("crypto");
-const router = express.Router();
-const controller = require("../controllers/UserController");
+const router = express();
+
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const cookieParser = require("cookie-parser");
+const auth = require("../auth/auth.js");
 
 //router.get("/", controller.get);
-module.exports = router;
 
 var mysql = require("mysql2/promise");
 var pool = mysql.createPool({
@@ -24,7 +26,7 @@ router.get("/login", (req, res) => {
 router.get("/register", (req, res) => {
   res.render("register", { name: "nameless" });
 });
-router.get("/menu", (req, res) => {
+router.get("/menu", auth, (req, res) => {
   console.log(req.body);
   res.render("menu", { name: req.body.mail });
 });
@@ -40,14 +42,15 @@ router.post("/login", async (req, res) => {
 
   const mail = req.body.mail.toString();
 
-  const query = `SELECT motDePasse, sel FROM T_user where mail = ?;`;
-
+  const query = `SELECT mot_de_passe, sel FROM T_user where mail = ?;`;
+  console.log(req.body.mail, req.body.password);
   try {
     const [results, fields] = await pool.query(query, mail);
+    console.log(results);
     const sel = results[0].sel;
     console.log("sel", results[0].sel);
 
-    const mdpcrypt = results[0].motDePasse;
+    const mdpcrypt = results[0].mot_de_passe;
     console.log("mdpdb", mdpcrypt);
 
     console.log("mdp en claire", req.body.password);
@@ -56,7 +59,16 @@ router.post("/login", async (req, res) => {
     console.log("hash du mdp", newmdpcrypt);
 
     if (newmdpcrypt == mdpcrypt) {
-      res.render("menu", { name: "connexion reussi" });
+      const privateKey = fs.readFileSync("private.key");
+      console.log(privateKey);
+      const token = jwt.sign({ mail: mail }, privateKey, {
+        expiresIn: "1y",
+      });
+      res.cookie("authcookie", token, {
+        maxAge: 900000,
+        httpOnly: true,
+      });
+      res.redirect("http://localhost:8080/user/menu");
     } else {
       res.render("login", { name: "mail ou mot de passe incorrecte" });
     }
@@ -70,10 +82,12 @@ router.post("/register", (req, res) => {
   console.log(salt);
   const cryptedPw = crypto.hash("sha256", req.body.password + salt);
 
-  const query = `INSERT INTO T_user (mail, motDePasse, sel) VALUES (?, ?, ?);`;
+  const query = `INSERT INTO T_user (mail, mot_de_passe, sel) VALUES (?, ?, ?);`;
   const values = [req.body.mail, cryptedPw, salt];
 
   pool.query(query, values);
 
-  res.redirect("http://localhost:8080/user/menu");
+  res.redirect("http://localhost:8080/user/login");
 });
+
+module.exports = router;
