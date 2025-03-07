@@ -11,7 +11,8 @@ const auth = (req, res, next) => {
     authcookie,
     privateKey,
     (err, decodedtoken) => {
-      if (err) return res.status(403);
+      if (err)
+        return res.render("login", { name: "vous devez vous connecter " });
 
       req.user = decodedtoken;
       next();

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Menu</title>
+  </head>
+  <body>
+    <h1>vous etes sur la page d'admin<%= name %> !</h1>
+    <a href="/user/menu">retourner au menu</a>
+    <table>
+      <thead>
+        <tr>
+          <th>user ID</th>
+          <th>Username</th>
+          <th>Is admin ?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(user => { %>
+        <tr>
+          <td><%= user.userId %></td>
+          <td><%= user.mail %></td>
+          <td><%= user.admin %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </body>
+</html>

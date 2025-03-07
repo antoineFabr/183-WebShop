@@ -9,6 +9,8 @@ CREATE TABLE T_user(
    mail VARCHAR(50),
    mot_de_passe VARCHAR(64),
    PRIMARY KEY(userId),
+   admin BOOLEAN,
    sel VARCHAR(50),
+   
    UNIQUE (mail)
 );
